@@ -1,44 +1,59 @@
 # - * - encoding: UTF-8 -*-
-from os import *
+
+import os
+import xdg.BaseDirectory 
 import mimetypes
 import re
 from gi.repository import Gtk
 import glob
+def get_xdg_dir_dirs():
+	list_xdg_dirs = {} 
+	os.chdir(xdg.BaseDirectory.xdg_config_dirs[0])
+	with open('user-dirs.dirs','r') as xdg_dir_dirs: 
+		for line in xdg_dir_dirs:
+			print(line)
+			if line.startswith('XDG'):
+				xdg_dir = line.split("=")
+				xdg_dir[1]= xdg_dir[1].replace('"$HOME','')
+				xdg_dir[1] = xdg_dir[1][:-2]
+				list_xdg_dirs[xdg_dir[0]] = xdg_dir[1][:-2]
+	return list_xdg_dirs	
+				
 def rangement(dir):
-	audiosdir = path.expanduser('~')+'/Musique/'
-	videosdir = path.expanduser('~')+'/Vidéos/'
-	imagesdir = path.expanduser('~')+'/Images/'
-	documentsdir = path.expanduser('~')+'/Documents/'
-	archivesdir =  path.expanduser('~')+'/Archives/'
+	list_xdg = get_xdg_dir_dirs()
+	audiosdir = os.path.expanduser('~')+list_xdg["XDG_MUSIC_DIR"]+'/'
+	videosdir = os.path.expanduser('~')+list_xdg["XDG_VIDEOS_DIR"]+'/'
+	imagesdir = os.path.expanduser('~')+list_xdg["XDG_PICTURES_DIR"]+'/'
+	documentsdir = os.path.expanduser('~')+list_xdg["XDG_DOCUMENTS_DIR"]+'/'
+	archivesdir =  os.path.expanduser('~')+'/Archives/'
 	listregex = {"musiques":  re.compile('^audio/*'),
 			"images": re.compile('^image/*'),
 			'videos': re.compile('^video/*'),
 	'documents' : re.compile('^application/(pdf|vnd*)'),
 	'archives' : re.compile('^application/(zip|x-tar|rar)')
 }
-	chdir(dir)
+	os.chdir(dir)
 	listnumfilemoved = {"musiques": 0,"archives": 0 ,
 			"documents":0,"images":0,
 			"videos": 0}
-	for file in listdir('.'):
+	for file in os.listdir('.'):
 		filemimetype = str(mimetypes.guess_type(file)[0])
 		print(filemimetype)
  		if listregex['documents'].match(filemimetype) :
-			rename(file,documentsdir+file)
+			os.rename(file,documentsdir+file)
 			listnumfilemoved['Documents'] += 1
  		elif listregex['images'].match(filemimetype) :
-			rename(file,imagesdir+file)
+			os.rename(file,imagesdir+file)
 			listnumfilemoved['images']+= 1
  		elif listregex['videos'].match(filemimetype) :
-			rename(file,videosdir+file)
+			os.rename(file,videosdir+file)
 			listnumfilemoved["videos"] += 1
 		elif listregex['archives'].match(filemimetype) :
-			renames(file,archivesdir+file)
+			os.renames(file,archivesdir+file)
 			listnumfilemoved["archives"] += 1
 		elif listregex['musiques'].match(filemimetype):
-			rename(file,audiosdir+file)
+			os.rename(file,audiosdir+file)
 			listnumfilemoved["musiques"] += 1
- 
 	return listnumfilemoved
 
 class MyWindow(Gtk.Window):
@@ -50,7 +65,7 @@ class MyWindow(Gtk.Window):
 		#combo box
 		dir_combo = Gtk.ComboBoxText()
 		dir_combo.connect("changed",self.on_dir_combo_changed)
-		for file in glob.glob(path.expanduser("~")+'/*'):
+		for file in glob.glob(os.path.expanduser("~")+'/*'):
 			dir_combo.append_text(file)
 #		dir_combo.set_entry_text_column(0)
 		vbox.pack_start(dir_combo,False,False,True)
