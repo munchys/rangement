@@ -11,7 +11,6 @@ def get_xdg_dir_dirs():
 	os.chdir(xdg.BaseDirectory.xdg_config_dirs[0])
 	with open('user-dirs.dirs','r') as xdg_dir_dirs: 
 		for line in xdg_dir_dirs:
-			print(line)
 			if line.startswith('XDG'):
 				xdg_dir = line.split("=")
 				xdg_dir[1]= xdg_dir[1].replace('"$HOME','')
